@@ -25,24 +25,13 @@ def parse_chat_completions(bytes_: bytes):
     line0 = txt_lines[0]
     target_info = dict()
     _start_token = "data: "
-
     if line0.startswith(_start_token):
         is_stream = True
         line0 = orjson.loads(line0[len(_start_token) :])
-
-        if "choices" not in line0:
-            logger.warning(f"line0 not contains choices: {line0}")
-            raise KeyError("choices not in line0")
-
         msg = line0["choices"][0]["delta"]
     else:
         is_stream = False
         line0 = orjson.loads("".join(txt_lines))
-
-        if "choices" not in line0:
-            logger.warning(f"line0 not contains choices: {line0}")
-            raise KeyError("choices not in line0")
-
         msg = line0["choices"][0]["message"]
 
     target_info["created"] = line0["created"]
@@ -57,7 +46,9 @@ def parse_chat_completions(bytes_: bytes):
         if line in ("", "\n", "\n\n"):
             continue
         elif line.startswith(_start_token):
-            target_info["content"] += _parse_iter_line_content(line[len(_start_token) :])
+            target_info["content"] += _parse_iter_line_content(
+                line[len(_start_token) :]
+            )
         else:
             logger.warning(f"line not startswith data: {line}")
     return target_info
